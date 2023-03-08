@@ -1,8 +1,8 @@
-package gonmap
+package _type
 
 type ProbeList []string
 
-var emptyProbeList []string
+var EmptyProbeList []string
 
 func (p ProbeList) removeDuplicate() ProbeList {
 	result := make([]string, 0, len(p))

@@ -1491,7 +1491,7 @@ var nmapServicesString = `1	tcpmux
 1782	hp-hcip
 1784	finle-lm
 1785	windlm
-1786	funk-logger
+1786	funk-GlobalLogger
 1787	funk-license
 1788	psmond
 1789	hello

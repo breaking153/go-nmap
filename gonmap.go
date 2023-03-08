@@ -1,6 +1,7 @@
 package gonmap
 
 import (
+	"github.com/lcvvvv/gonmap/type"
 	"log"
 	"os"
 	"regexp"
@@ -8,21 +9,21 @@ import (
 	"time"
 )
 
-var nmap *Nmap
+var nmap *_type.Nmap
 
 var ProbesCount = 0     //探针数
 var MatchCount = 0      //指纹数
 var UsedProbesCount = 0 //已使用探针数
 var UsedMatchCount = 0  //已使用指纹数
 
-var logger = Logger(log.New(os.Stderr, "[gonmap] ", log.Ldate|log.Ltime|log.Lshortfile))
+var GlobalLogger = Logger(log.New(os.Stderr, "[gonmap] ", log.Ldate|log.Ltime|log.Lshortfile))
 
 type Logger interface {
 	Printf(format string, v ...interface{})
 	Println(v ...interface{})
 }
 
-//r["PROBE"] 总探针数、r["MATCH"] 总指纹数 、r["USED_PROBE"] 已使用探针数、r["USED_MATCH"] 已使用指纹数
+// r["PROBE"] 总探针数、r["MATCH"] 总指纹数 、r["USED_PROBE"] 已使用探针数、r["USED_MATCH"] 已使用指纹数
 func init() {
 	initWithFilter(9)
 }
@@ -30,50 +31,50 @@ func init() {
 func initWithFilter(filter int) {
 	//初始化NMAP探针库
 	repairNMAPString()
-	nmap = &Nmap{
-		exclude:      emptyPortList,
-		probeNameMap: make(map[string]*probe),
-		probeSort:    []string{},
-		portProbeMap: make(map[int]ProbeList),
+	nmap = &_type.Nmap{
+		Exclude:      _type.EmptyPortList,
+		ProbeNameMap: make(map[string]*_type.Probe),
+		ProbeSort:    []string{},
+		PortProbeMap: make(map[int]_type.ProbeList),
 
-		filter:  filter,
-		timeout: time.Second,
+		Filter:  filter,
+		Timeout: time.Second,
 
-		probeUsed:          emptyProbeList,
-		bypassAllProbePort: []int{161, 137, 139, 135, 389, 443, 548, 1433, 6379, 1883, 5432, 1521, 3389, 3388, 3389, 33890, 33900},
-		sslSecondProbeMap:  []string{"TCP_TerminalServerCookie", "TCP_TerminalServer"},
-		allProbeMap:        []string{"TCP_GetRequest", "TCP_NULL"},
-		sslProbeMap:        []string{"TCP_TLSSessionReq", "TCP_SSLSessionReq", "TCP_SSLv23SessionReq"},
+		ProbeUsed:          _type.EmptyProbeList,
+		BypassAllProbePort: []int{161, 137, 139, 135, 389, 443, 548, 1433, 6379, 1883, 5432, 1521, 3389, 3388, 3389, 33890, 33900},
+		SslSecondProbeMap:  []string{"TCP_TerminalServerCookie", "TCP_TerminalServer"},
+		AllProbeMap:        []string{"TCP_GetRequest", "TCP_NULL"},
+		SslProbeMap:        []string{"TCP_TLSSessionReq", "TCP_SSLSessionReq", "TCP_SSLv23SessionReq"},
 	}
 	for i := 0; i <= 65535; i++ {
-		nmap.portProbeMap[i] = []string{}
+		nmap.PortProbeMap[i] = []string{}
 	}
-	nmap.loads(nmapServiceProbes + nmapCustomizeProbes)
+	nmap.Loads(nmapServiceProbes + nmapCustomizeProbes)
 	//修复fallback
-	nmap.fixFallback()
+	nmap.FixFallback()
 	//新增自定义指纹信息
 	customNMAPMatch()
 	//优化检测逻辑，及端口对应的默认探针
 	optimizeNMAPProbes()
 	//排序
-	nmap.sslSecondProbeMap = nmap.sortOfRarity(nmap.sslSecondProbeMap)
-	nmap.allProbeMap = nmap.sortOfRarity(nmap.allProbeMap)
-	nmap.sslProbeMap = nmap.sortOfRarity(nmap.sslProbeMap)
-	for index, value := range nmap.portProbeMap {
-		nmap.portProbeMap[index] = nmap.sortOfRarity(value)
+	nmap.SslSecondProbeMap = nmap.SortOfRarity(nmap.SslSecondProbeMap)
+	nmap.AllProbeMap = nmap.SortOfRarity(nmap.AllProbeMap)
+	nmap.SslProbeMap = nmap.SortOfRarity(nmap.SslProbeMap)
+	for index, value := range nmap.PortProbeMap {
+		nmap.PortProbeMap[index] = nmap.SortOfRarity(value)
 	}
 	//输出统计数据状态
 	statistical()
 }
 
 func statistical() {
-	ProbesCount = len(nmap.probeSort)
-	for _, p := range nmap.probeNameMap {
-		MatchCount += len(p.matchGroup)
+	ProbesCount = len(nmap.ProbeSort)
+	for _, p := range nmap.ProbeNameMap {
+		MatchCount += len(p.MatchGroup)
 	}
-	UsedProbesCount = len(nmap.portProbeMap[0])
-	for _, p := range nmap.portProbeMap[0] {
-		UsedMatchCount += len(nmap.probeNameMap[p].matchGroup)
+	UsedProbesCount = len(nmap.PortProbeMap[0])
+	for _, p := range nmap.PortProbeMap[0] {
+		UsedMatchCount += len(nmap.ProbeNameMap[p].MatchGroup)
 	}
 }
 
@@ -139,42 +140,42 @@ func customNMAPMatch() {
 }
 
 func optimizeNMAPProbes() {
-	nmap.probeNameMap["TCP_GenericLines"].sslports = nmap.probeNameMap["TCP_GenericLines"].sslports.append(993, 994, 456, 995)
+	nmap.ProbeNameMap["TCP_GenericLines"].Sslports = nmap.ProbeNameMap["TCP_GenericLines"].Sslports.Append(993, 994, 456, 995)
 	//优化检测逻辑，及端口对应的默认探针
-	nmap.portProbeMap[993] = append([]string{"TCP_GenericLines"}, nmap.portProbeMap[993]...)
-	nmap.portProbeMap[994] = append([]string{"TCP_GenericLines"}, nmap.portProbeMap[994]...)
-	nmap.portProbeMap[995] = append([]string{"TCP_GenericLines"}, nmap.portProbeMap[995]...)
-	nmap.portProbeMap[465] = append([]string{"TCP_GenericLines"}, nmap.portProbeMap[465]...)
-	nmap.portProbeMap[3390] = append(nmap.portProbeMap[3390], "TCP_TerminalServer")
-	nmap.portProbeMap[3390] = append(nmap.portProbeMap[3390], "TCP_TerminalServerCookie")
-	nmap.portProbeMap[33890] = append(nmap.portProbeMap[33890], "TCP_TerminalServer")
-	nmap.portProbeMap[33890] = append(nmap.portProbeMap[33890], "TCP_TerminalServerCookie")
-	nmap.portProbeMap[33900] = append(nmap.portProbeMap[33900], "TCP_TerminalServer")
-	nmap.portProbeMap[33900] = append(nmap.portProbeMap[33900], "TCP_TerminalServerCookie")
-	nmap.portProbeMap[7890] = append(nmap.portProbeMap[7890], "TCP_Socks5")
-	nmap.portProbeMap[7891] = append(nmap.portProbeMap[7891], "TCP_Socks5")
-	nmap.portProbeMap[4000] = append(nmap.portProbeMap[4000], "TCP_Socks5")
-	nmap.portProbeMap[2022] = append(nmap.portProbeMap[2022], "TCP_Socks5")
-	nmap.portProbeMap[6000] = append(nmap.portProbeMap[6000], "TCP_Socks5")
-	nmap.portProbeMap[7000] = append(nmap.portProbeMap[7000], "TCP_Socks5")
+	nmap.PortProbeMap[993] = append([]string{"TCP_GenericLines"}, nmap.PortProbeMap[993]...)
+	nmap.PortProbeMap[994] = append([]string{"TCP_GenericLines"}, nmap.PortProbeMap[994]...)
+	nmap.PortProbeMap[995] = append([]string{"TCP_GenericLines"}, nmap.PortProbeMap[995]...)
+	nmap.PortProbeMap[465] = append([]string{"TCP_GenericLines"}, nmap.PortProbeMap[465]...)
+	nmap.PortProbeMap[3390] = append(nmap.PortProbeMap[3390], "TCP_TerminalServer")
+	nmap.PortProbeMap[3390] = append(nmap.PortProbeMap[3390], "TCP_TerminalServerCookie")
+	nmap.PortProbeMap[33890] = append(nmap.PortProbeMap[33890], "TCP_TerminalServer")
+	nmap.PortProbeMap[33890] = append(nmap.PortProbeMap[33890], "TCP_TerminalServerCookie")
+	nmap.PortProbeMap[33900] = append(nmap.PortProbeMap[33900], "TCP_TerminalServer")
+	nmap.PortProbeMap[33900] = append(nmap.PortProbeMap[33900], "TCP_TerminalServerCookie")
+	nmap.PortProbeMap[7890] = append(nmap.PortProbeMap[7890], "TCP_Socks5")
+	nmap.PortProbeMap[7891] = append(nmap.PortProbeMap[7891], "TCP_Socks5")
+	nmap.PortProbeMap[4000] = append(nmap.PortProbeMap[4000], "TCP_Socks5")
+	nmap.PortProbeMap[2022] = append(nmap.PortProbeMap[2022], "TCP_Socks5")
+	nmap.PortProbeMap[6000] = append(nmap.PortProbeMap[6000], "TCP_Socks5")
+	nmap.PortProbeMap[7000] = append(nmap.PortProbeMap[7000], "TCP_Socks5")
 	//将TCP_GetRequest的fallback参数设置为NULL探针，避免漏资产
-	nmap.probeNameMap["TCP_GenericLines"].fallback = "TCP_NULL"
-	nmap.probeNameMap["TCP_GetRequest"].fallback = "TCP_NULL"
-	nmap.probeNameMap["TCP_TerminalServerCookie"].fallback = "TCP_GetRequest"
-	nmap.probeNameMap["TCP_TerminalServer"].fallback = "TCP_GetRequest"
+	nmap.ProbeNameMap["TCP_GenericLines"].Fallback = "TCP_NULL"
+	nmap.ProbeNameMap["TCP_GetRequest"].Fallback = "TCP_NULL"
+	nmap.ProbeNameMap["TCP_TerminalServerCookie"].Fallback = "TCP_GetRequest"
+	nmap.ProbeNameMap["TCP_TerminalServer"].Fallback = "TCP_GetRequest"
 }
 
-//配置类
+// 配置类
 func SetFilter(filter int) {
 	initWithFilter(filter)
 }
 
 func SetLogger(v Logger) {
-	logger = v
+	GlobalLogger = v
 }
 
-//功能类
-func New() *Nmap {
+// 功能类
+func New() *_type.Nmap {
 	n := *nmap
 	return &n
 }

@@ -1,4 +1,4 @@
-package gonmap
+package _type
 
 import (
 	"regexp"
@@ -11,7 +11,7 @@ var portGroupRegx = regexp.MustCompile("^(\\d+(?:-\\d+)?)(?:,\\d+(?:-\\d+)?)*$")
 
 type PortList []int
 
-var emptyPortList = PortList([]int{})
+var EmptyPortList = PortList([]int{})
 
 func parsePortList(express string) PortList {
 	var list = PortList([]int{})
@@ -56,7 +56,7 @@ func (p PortList) exist(port int) bool {
 	return false
 }
 
-func (p PortList) append(ports ...int) PortList {
+func (p PortList) Append(ports ...int) PortList {
 	p = append(p, ports...)
 	p = p.removeDuplicate()
 	return p

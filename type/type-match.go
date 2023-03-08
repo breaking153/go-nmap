@@ -1,8 +1,9 @@
-package gonmap
+package _type
 
 import (
 	"errors"
 	"fmt"
+	"github.com/lcvvvv/gonmap"
 	"regexp"
 	"strconv"
 	"strings"
@@ -53,7 +54,7 @@ func parseMatch(s string, soft bool) *match {
 	args := regx.FindStringSubmatch(s)
 	m.soft = soft
 	m.service = args[1]
-	m.service = FixProtocol(m.service)
+	m.service = gonmap.FixProtocol(m.service)
 	m.pattern = args[2]
 	m.patternRegexp = m.getPatternRegexp(m.pattern, args[3])
 	m.versionInfo = &FingerPrint{

@@ -1,30 +1,31 @@
-package gonmap
+package _type
 
 import (
 	"context"
 	"fmt"
+	"github.com/lcvvvv/gonmap"
 	"github.com/miekg/dns"
 	"strings"
 	"time"
 )
 
 type Nmap struct {
-	exclude      PortList
-	portProbeMap map[int]ProbeList
-	probeNameMap map[string]*probe
-	probeSort    ProbeList
+	Exclude      PortList
+	PortProbeMap map[int]ProbeList
+	ProbeNameMap map[string]*Probe
+	ProbeSort    ProbeList
 
-	probeUsed ProbeList
+	ProbeUsed ProbeList
 
-	filter int
+	Filter int
 
 	//检测端口存活的超时时间
-	timeout time.Duration
+	Timeout time.Duration
 
-	bypassAllProbePort PortList
-	sslSecondProbeMap  ProbeList
-	allProbeMap        ProbeList
-	sslProbeMap        ProbeList
+	BypassAllProbePort PortList
+	SslSecondProbeMap  ProbeList
+	AllProbeMap        ProbeList
+	SslProbeMap        ProbeList
 }
 
 //扫描类
@@ -60,17 +61,17 @@ func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status S
 
 func (n *Nmap) Scan(ip string, port int) (status Status, response *Response) {
 	var probeNames ProbeList
-	if n.bypassAllProbePort.exist(port) == true {
-		probeNames = append(n.portProbeMap[port], n.allProbeMap...)
+	if n.BypassAllProbePort.exist(port) == true {
+		probeNames = append(n.PortProbeMap[port], n.AllProbeMap...)
 	} else {
-		probeNames = append(n.allProbeMap, n.portProbeMap[port]...)
+		probeNames = append(n.AllProbeMap, n.PortProbeMap[port]...)
 	}
-	probeNames = append(probeNames, n.sslProbeMap...)
+	probeNames = append(probeNames, n.SslProbeMap...)
 	//探针去重
 	probeNames = probeNames.removeDuplicate()
 
 	firstProbe := probeNames[0]
-	status, response = n.getRealResponse(ip, port, n.timeout, firstProbe)
+	status, response = n.getRealResponse(ip, port, n.Timeout, firstProbe)
 	if status == Closed || status == Matched {
 		return status, response
 	}
@@ -93,7 +94,7 @@ func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, pro
 }
 
 func (n *Nmap) getResponseBySSLSecondProbes(host string, port int, timeout time.Duration) (status Status, response *Response) {
-	status, response = n.getResponseByProbes(host, port, timeout, n.sslSecondProbeMap...)
+	status, response = n.getResponseByProbes(host, port, timeout, n.SslSecondProbeMap...)
 	if status != Matched || response.FingerPrint.Service == "ssl" {
 		status, response = n.getResponseByHTTPS(host, port, timeout)
 	}
@@ -107,20 +108,20 @@ func (n *Nmap) getResponseBySSLSecondProbes(host string, port int, timeout time.
 }
 
 func (n *Nmap) getResponseByHTTPS(host string, port int, timeout time.Duration) (status Status, response *Response) {
-	var httpRequest = n.probeNameMap["TCP_GetRequest"]
+	var httpRequest = n.ProbeNameMap["TCP_GetRequest"]
 	return n.getResponse(host, port, true, timeout, httpRequest)
 }
 
 func (n *Nmap) getResponseByProbes(host string, port int, timeout time.Duration, probes ...string) (status Status, response *Response) {
 	var responseNotMatch *Response
 	for _, requestName := range probes {
-		if n.probeUsed.exist(requestName) {
+		if n.ProbeUsed.exist(requestName) {
 			continue
 		}
-		n.probeUsed = append(n.probeUsed, requestName)
-		p := n.probeNameMap[requestName]
+		n.ProbeUsed = append(n.ProbeUsed, requestName)
+		p := n.ProbeNameMap[requestName]
 
-		status, response = n.getResponse(host, port, p.sslports.exist(port), timeout, p)
+		status, response = n.getResponse(host, port, p.Sslports.exist(port), timeout, p)
 		//如果端口未开放，则等待10s后重新连接
 		//if b.status == Closed {
 		//	time.Sleep(time.Second * 10)
@@ -143,7 +144,7 @@ func (n *Nmap) getResponseByProbes(host string, port int, timeout time.Duration,
 	return status, response
 }
 
-func (n *Nmap) getResponse(host string, port int, tls bool, timeout time.Duration, p *probe) (Status, *Response) {
+func (n *Nmap) getResponse(host string, port int, tls bool, timeout time.Duration, p *Probe) (Status, *Response) {
 	if port == 53 {
 		if DnsScan(host, port) {
 			return Matched, &dnsResponse
@@ -184,7 +185,7 @@ func (n *Nmap) getResponse(host string, port int, tls bool, timeout time.Duratio
 
 func (n *Nmap) getFinger(responseRaw string, tls bool, requestName string) *FingerPrint {
 	data := n.convResponse(responseRaw)
-	probe := n.probeNameMap[requestName]
+	probe := n.ProbeNameMap[requestName]
 
 	finger := probe.match(data)
 
@@ -194,18 +195,18 @@ func (n *Nmap) getFinger(responseRaw string, tls bool, requestName string) *Fing
 		}
 	}
 
-	if finger.Service != "" || n.probeNameMap[requestName].fallback == "" {
+	if finger.Service != "" || n.ProbeNameMap[requestName].Fallback == "" {
 		//标记当前探针名称
 		finger.ProbeName = requestName
 		return finger
 	}
 
-	fallback := n.probeNameMap[requestName].fallback
-	fallbackProbe := n.probeNameMap[fallback]
+	fallback := n.ProbeNameMap[requestName].Fallback
+	fallbackProbe := n.ProbeNameMap[fallback]
 	for fallback != "" {
-		logger.Println(requestName, " fallback is :", fallback)
+		gonmap.GlobalLogger.Println(requestName, " fallback is :", fallback)
 		finger = fallbackProbe.match(data)
-		fallback = n.probeNameMap[fallback].fallback
+		fallback = n.ProbeNameMap[fallback].Fallback
 		if finger.Service != "" {
 			break
 		}
@@ -229,22 +230,22 @@ func (n *Nmap) convResponse(s1 string) string {
 //配置类
 
 func (n *Nmap) SetTimeout(timeout time.Duration) {
-	n.timeout = timeout
+	n.Timeout = timeout
 }
 
 func (n *Nmap) OpenDeepIdentify() {
 	//-sV参数深度解析
-	n.allProbeMap = n.probeSort
+	n.AllProbeMap = n.ProbeSort
 }
 
 func (n *Nmap) AddMatch(probeName string, expr string) {
-	var probe = n.probeNameMap[probeName]
+	var probe = n.ProbeNameMap[probeName]
 	probe.loadMatch(expr, false)
 }
 
 //初始化类
 
-func (n *Nmap) loads(s string) {
+func (n *Nmap) Loads(s string) {
 	lines := strings.Split(s, "\n")
 	var probeGroups [][]string
 	var probeLines []string
@@ -274,42 +275,42 @@ func (n *Nmap) loads(s string) {
 }
 
 func (n *Nmap) loadExclude(expr string) {
-	n.exclude = parsePortList(expr)
+	n.Exclude = parsePortList(expr)
 }
 
-func (n *Nmap) pushProbe(p probe) {
-	n.probeSort = append(n.probeSort, p.name)
-	n.probeNameMap[p.name] = &p
+func (n *Nmap) pushProbe(p Probe) {
+	n.ProbeSort = append(n.ProbeSort, p.name)
+	n.ProbeNameMap[p.name] = &p
 
 	//建立端口扫描对应表，将根据端口号决定使用何种请求包
 	//如果端口列表为空，则为全端口
-	if p.rarity > n.filter {
+	if p.rarity > n.Filter {
 		return
 	}
 	//0记录所有使用的探针
-	n.portProbeMap[0] = append(n.portProbeMap[0], p.name)
+	n.PortProbeMap[0] = append(n.PortProbeMap[0], p.name)
 
 	//分别压入sslports,ports
 	for _, i := range p.ports {
-		n.portProbeMap[i] = append(n.portProbeMap[i], p.name)
+		n.PortProbeMap[i] = append(n.PortProbeMap[i], p.name)
 	}
 
-	for _, i := range p.sslports {
-		n.portProbeMap[i] = append(n.portProbeMap[i], p.name)
+	for _, i := range p.Sslports {
+		n.PortProbeMap[i] = append(n.PortProbeMap[i], p.name)
 	}
 
 }
 
-func (n *Nmap) fixFallback() {
-	for probeName, probeType := range n.probeNameMap {
-		fallback := probeType.fallback
+func (n *Nmap) FixFallback() {
+	for probeName, probeType := range n.ProbeNameMap {
+		fallback := probeType.Fallback
 		if fallback == "" {
 			continue
 		}
-		if _, ok := n.probeNameMap["TCP_"+fallback]; ok {
-			n.probeNameMap[probeName].fallback = "TCP_" + fallback
+		if _, ok := n.ProbeNameMap["TCP_"+fallback]; ok {
+			n.ProbeNameMap[probeName].Fallback = "TCP_" + fallback
 		} else {
-			n.probeNameMap[probeName].fallback = "UDP_" + fallback
+			n.ProbeNameMap[probeName].Fallback = "UDP_" + fallback
 		}
 	}
 }
@@ -335,13 +336,13 @@ func (n *Nmap) isCommand(line string) bool {
 	return false
 }
 
-func (n *Nmap) sortOfRarity(list ProbeList) ProbeList {
+func (n *Nmap) SortOfRarity(list ProbeList) ProbeList {
 	if len(list) == 0 {
 		return list
 	}
 	var raritySplice []int
 	for _, probeName := range list {
-		rarity := n.probeNameMap[probeName].rarity
+		rarity := n.ProbeNameMap[probeName].rarity
 		raritySplice = append(raritySplice, rarity)
 	}
 
@@ -359,14 +360,14 @@ func (n *Nmap) sortOfRarity(list ProbeList) ProbeList {
 	}
 
 	for _, probeName := range list {
-		rarity := n.probeNameMap[probeName].rarity
+		rarity := n.ProbeNameMap[probeName].rarity
 		raritySplice = append(raritySplice, rarity)
 	}
 
 	return list
 }
 
-//工具函数
+// 工具函数
 func DnsScan(host string, port int) bool {
 	domainServer := fmt.Sprintf("%s:%d", host, port)
 	c := dns.Client{

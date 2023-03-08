@@ -1,4 +1,4 @@
-package gonmap
+package _type
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type probe struct {
+type Probe struct {
 	//探针级别
 	rarity int
 	//探针名称
@@ -18,15 +18,15 @@ type probe struct {
 	//探针适用默认端口号
 	ports PortList
 	//探针适用SSL端口号
-	sslports PortList
+	Sslports PortList
 
 	//totalwaitms  time.Duration
 	//tcpwrappedms time.Duration
 
 	//探针对应指纹库
-	matchGroup []*match
+	MatchGroup []*match
 	//探针指纹库若匹配失败，则会尝试使用fallback指定探针的指纹库
-	fallback string
+	Fallback string
 
 	//探针发送协议类型
 	protocol string
@@ -34,7 +34,7 @@ type probe struct {
 	sendRaw string
 }
 
-func (p *probe) scan(host string, port int, tls bool, timeout time.Duration, size int) (string, bool, error) {
+func (p *Probe) scan(host string, port int, tls bool, timeout time.Duration, size int) (string, bool, error) {
 	uri := fmt.Sprintf("%s:%d", host, port)
 
 	sendRaw := strings.Replace(p.sendRaw, "{Host}", fmt.Sprintf("%s:%d", host, port), -1)
@@ -50,11 +50,11 @@ func (p *probe) scan(host string, port int, tls bool, timeout time.Duration, siz
 	return text, tls, err
 }
 
-func (p *probe) match(s string) *FingerPrint {
+func (p *Probe) match(s string) *FingerPrint {
 	var f = &FingerPrint{}
 	var softFilter string
 
-	for _, m := range p.matchGroup {
+	for _, m := range p.MatchGroup {
 		//实现软筛选
 		if softFilter != "" {
 			if m.service != softFilter {
@@ -85,17 +85,17 @@ var probeExprRegx = regexp.MustCompile("^(UDP|TCP) ([a-zA-Z0-9-_./]+) (?:q\\|([^
 var probeIntRegx = regexp.MustCompile(`^(\d+)$`)
 var probeStrRegx = regexp.MustCompile(`^([a-zA-Z0-9-_./]+)$`)
 
-func parseProbe(lines []string) *probe {
-	var p = &probe{}
-	p.ports = emptyPortList
-	p.sslports = emptyPortList
+func parseProbe(lines []string) *Probe {
+	var p = &Probe{}
+	p.ports = EmptyPortList
+	p.Sslports = EmptyPortList
 	for _, line := range lines {
 		p.loadLine(line)
 	}
 	return p
 }
 
-func (p *probe) loadLine(s string) {
+func (p *Probe) loadLine(s string) {
 	//分解命令
 	i := strings.Index(s, " ")
 	commandName := s[:i]
@@ -119,11 +119,11 @@ func (p *probe) loadLine(s string) {
 	case "rarity":
 		p.rarity = p.getInt(commandArgs)
 	case "fallback":
-		p.fallback = p.getString(commandArgs)
+		p.Fallback = p.getString(commandArgs)
 	}
 }
 
-func (p *probe) loadProbe(s string) {
+func (p *Probe) loadProbe(s string) {
 	//Probe <protocol> <probename> <probestring>
 	if !probeExprRegx.MatchString(s) {
 		panic(errors.New("probe 语句格式不正确"))
@@ -143,7 +143,7 @@ func (p *probe) loadProbe(s string) {
 	p.sendRaw = str
 }
 
-func (p *probe) loadMatch(s string, soft bool) {
+func (p *Probe) loadMatch(s string, soft bool) {
 	//"match": misc.MakeRegexpCompile("^([a-zA-Z0-9-_./]+) m\\|([^|]+)\\|([is]{0,2}) (.*)$"),
 	//match <Service> <pattern>|<patternopt> [<versioninfo>]
 	//	"matchVersioninfoProductname": misc.MakeRegexpCompile("p/([^/]+)/"),
@@ -153,18 +153,18 @@ func (p *probe) loadMatch(s string, soft bool) {
 	//	"matchVersioninfoOS":          misc.MakeRegexpCompile("o/([^/]+)/"),
 	//	"matchVersioninfoDevice":      misc.MakeRegexpCompile("d/([^/]+)/"),
 
-	p.matchGroup = append(p.matchGroup, parseMatch(s, soft))
+	p.MatchGroup = append(p.MatchGroup, parseMatch(s, soft))
 }
 
-func (p *probe) loadPorts(expr string, ssl bool) {
+func (p *Probe) loadPorts(expr string, ssl bool) {
 	if ssl {
-		p.sslports = parsePortList(expr)
+		p.Sslports = parsePortList(expr)
 	} else {
 		p.ports = parsePortList(expr)
 	}
 }
 
-func (p *probe) getInt(expr string) int {
+func (p *Probe) getInt(expr string) int {
 	if !probeIntRegx.MatchString(expr) {
 		panic(errors.New("totalwaitms or tcpwrappedms 语句参数不正确"))
 	}
@@ -172,7 +172,7 @@ func (p *probe) getInt(expr string) int {
 	return i
 }
 
-func (p *probe) getString(expr string) string {
+func (p *Probe) getString(expr string) string {
 	if !probeStrRegx.MatchString(expr) {
 		panic(errors.New("fallback 语句参数不正确"))
 	}

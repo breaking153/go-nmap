@@ -1,4 +1,4 @@
-package gonmap
+package _type
 
 const (
 	Closed     Status = 0x000a1
