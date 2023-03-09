@@ -3,7 +3,7 @@ package _type
 import (
 	"errors"
 	"fmt"
-	"github.com/lcvvvv/gonmap"
+	Probes "github.com/breaking153/go-nmap/probes"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,6 +19,7 @@ type match struct {
 }
 
 var matchLoadRegexps = []*regexp.Regexp{
+
 	regexp.MustCompile("^([a-zA-Z0-9-_./]+) m\\|([^|]+)\\|([is]{0,2})(?: (.*))?$"),
 	regexp.MustCompile("^([a-zA-Z0-9-_./]+) m=([^=]+)=([is]{0,2})(?: (.*))?$"),
 	regexp.MustCompile("^([a-zA-Z0-9-_./]+) m%([^%]+)%([is]{0,2})(?: (.*))?$"),
@@ -54,7 +55,7 @@ func parseMatch(s string, soft bool) *match {
 	args := regx.FindStringSubmatch(s)
 	m.soft = soft
 	m.service = args[1]
-	m.service = gonmap.FixProtocol(m.service)
+	m.service = Probes.FixProtocol(m.service)
 	m.pattern = args[2]
 	m.patternRegexp = m.getPatternRegexp(m.pattern, args[3])
 	m.versionInfo = &FingerPrint{

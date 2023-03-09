@@ -1,13 +1,14 @@
-package gonmap
+package test
 
 import (
 	"fmt"
+	"github.com/breaking153/go-nmap"
 	"testing"
 	"time"
 )
 
 func TestScan(t *testing.T) {
-	var scanner = New()
+	var scanner = gonmap.New()
 	host := "192.168.100.144"
 	port := 5001
 	status, response := scanner.ScanTimeout(host, port, time.Second*30)

@@ -3,7 +3,7 @@ package _type
 import (
 	"context"
 	"fmt"
-	"github.com/lcvvvv/gonmap"
+	gonmap "github.com/breaking153/go-nmap"
 	"github.com/miekg/dns"
 	"strings"
 	"time"

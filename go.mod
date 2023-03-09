@@ -1,4 +1,4 @@
-module github.com/lcvvvv/gonmap
+module github.com/breaking153/go-nmap
 
 go 1.16
 

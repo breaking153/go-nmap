@@ -3,7 +3,7 @@ package _type
 import (
 	"errors"
 	"fmt"
-	"github.com/lcvvvv/gonmap/simplenet"
+	"github.com/breaking153/go-nmap/simplenet"
 	"regexp"
 	"strconv"
 	"strings"

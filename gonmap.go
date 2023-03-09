@@ -1,10 +1,10 @@
 package gonmap
 
 import (
-	"github.com/lcvvvv/gonmap/type"
+	"github.com/breaking153/go-nmap/probes"
+	"github.com/breaking153/go-nmap/type"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -49,7 +49,7 @@ func initWithFilter(filter int) {
 	for i := 0; i <= 65535; i++ {
 		nmap.PortProbeMap[i] = []string{}
 	}
-	nmap.Loads(nmapServiceProbes + nmapCustomizeProbes)
+	nmap.Loads(probes.NmapServiceProbes)
 	//修复fallback
 	nmap.FixFallback()
 	//新增自定义指纹信息
@@ -79,29 +79,29 @@ func statistical() {
 }
 
 func repairNMAPString() {
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, "${backquote}", "`")
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `q|GET / HTTP/1.0\r\n\r\n|`,
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, "${backquote}", "`")
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `q|GET / HTTP/1.0\r\n\r\n|`,
 		`q|GET / HTTP/1.0\r\nHost: {Host}\r\nUser-Agent: Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)\r\nAccept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2\r\nAccept: */*\r\n\r\n|`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `\1`, `$1`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?=\\)`, `(?:\\)`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?=[\w._-]{5,15}\r?\n$)`, `(?:[\w._-]{5,15}\r?\n$)`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?:[^\r\n]*r\n(?!\r\n))*?`, `(?:[^\r\n]+\r\n)*?`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?:[^\r\n]*\r\n(?!\r\n))*?`, `(?:[^\r\n]+\r\n)*?`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?:[^\r\n]+\r\n(?!\r\n))*?`, `(?:[^\r\n]+\r\n)*?`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!2526)`, ``)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!400)`, ``)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!\0\0)`, ``)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!/head>)`, ``)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!HTTP|RTSP|SIP)`, ``)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!.*[sS][sS][hH]).*`, `.*`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!\xff)`, `.`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?!x)`, `[^x]`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?<=.)`, `(?:.)`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `(?<=\?)`, `(?:\?)`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `\x20\x02\x00.`, `\x20\x02..`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `match rtmp`, `# match rtmp`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `nmap`, `pamn`)
-	nmapServiceProbes = strings.ReplaceAll(nmapServiceProbes, `Nmap`, `pamn`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `\1`, `$1`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?=\\)`, `(?:\\)`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?=[\w._-]{5,15}\r?\n$)`, `(?:[\w._-]{5,15}\r?\n$)`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?:[^\r\n]*r\n(?!\r\n))*?`, `(?:[^\r\n]+\r\n)*?`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?:[^\r\n]*\r\n(?!\r\n))*?`, `(?:[^\r\n]+\r\n)*?`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?:[^\r\n]+\r\n(?!\r\n))*?`, `(?:[^\r\n]+\r\n)*?`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!2526)`, ``)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!400)`, ``)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!\0\0)`, ``)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!/head>)`, ``)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!HTTP|RTSP|SIP)`, ``)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!.*[sS][sS][hH]).*`, `.*`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!\xff)`, `.`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?!x)`, `[^x]`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?<=.)`, `(?:.)`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `(?<=\?)`, `(?:\?)`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `\x20\x02\x00.`, `\x20\x02..`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `match rtmp`, `# match rtmp`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `nmap`, `pamn`)
+	probes.NmapServiceProbes = strings.ReplaceAll(probes.NmapServiceProbes, `Nmap`, `pamn`)
 }
 
 func customNMAPMatch() {
@@ -178,64 +178,4 @@ func SetLogger(v Logger) {
 func New() *_type.Nmap {
 	n := *nmap
 	return &n
-}
-
-func GuessProtocol(port int) string {
-	protocol := nmapServices[port]
-	if protocol == "unknown" {
-		protocol = "http"
-	}
-	return protocol
-}
-
-var regexpFirstNum = regexp.MustCompile(`^\d`)
-
-func FixProtocol(oldProtocol string) string {
-	//进行最后输出修饰
-	if oldProtocol == "ssl/http" {
-		return "https"
-	}
-	if oldProtocol == "http-proxy" {
-		return "http"
-	}
-	if oldProtocol == "ms-wbt-server" {
-		return "rdp"
-	}
-	if oldProtocol == "microsoft-ds" {
-		return "smb"
-	}
-	if oldProtocol == "netbios-ssn" {
-		return "netbios"
-	}
-	if oldProtocol == "oracle-tns" {
-		return "oracle"
-	}
-	if oldProtocol == "msrpc" {
-		return "rpc"
-	}
-	if oldProtocol == "ms-sql-s" {
-		return "mssql"
-	}
-	if oldProtocol == "domain" {
-		return "dns"
-	}
-	if oldProtocol == "svnserve" {
-		return "svn"
-	}
-	if oldProtocol == "ibm-db2" {
-		return "db2"
-	}
-	if oldProtocol == "socks-proxy" {
-		return "socks5"
-	}
-	if len(oldProtocol) > 4 {
-		if oldProtocol[:4] == "ssl/" {
-			return oldProtocol[4:] + "-ssl"
-		}
-	}
-	if regexpFirstNum.MatchString(oldProtocol) {
-		oldProtocol = "S" + oldProtocol
-	}
-	oldProtocol = strings.ReplaceAll(oldProtocol, "_", "-")
-	return oldProtocol
 }
