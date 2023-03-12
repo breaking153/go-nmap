@@ -37,7 +37,7 @@
 50	re-mail-ck
 51	la-maint
 52	xns-time
-53	domain
+53	dns
 54	xns-ch
 55	isi-gl
 56	xns-auth
@@ -118,11 +118,11 @@
 132	cisco-sys
 133	statsrv
 134	ingres-net
-135	msrpc
+135	rpc
 136	profile
 137	netbios-ns
 138	netbios-dgm
-139	netbios-ssn
+139	netbios
 140	emfis-data
 141	emfis-cntl
 142	bl-idm
@@ -357,7 +357,7 @@
 442	cvc_hostd
 443	https
 444	snpp
-445	microsoft-ds
+445	smb
 446	ddm-rdb
 447	ddm-dfm
 448	ddm-ssl
@@ -435,7 +435,7 @@
 520	efs
 521	ripng
 522	ulp
-523	ibm-db2
+523	db2
 524	ncp
 525	timed
 526	tempo
@@ -1132,7 +1132,7 @@
 1430	tpdu
 1431	rgtp
 1432	blueberry-lm
-1433	ms-sql-s
+1433	mssql
 1434	ms-sql-m
 1435	ibm-cics
 1436	sas-2
@@ -1484,7 +1484,7 @@
 1782	hp-hcip
 1784	finle-lm
 1785	windlm
-1786	funk-GlobalLogger
+1786	funk-Logger
 1787	funk-license
 1788	psmond
 1789	hello
@@ -3072,7 +3072,7 @@
 3386	gprs-data
 3387	backroomnet
 3388	cbserver
-3389	ms-wbt-server
+3389	rdp
 3390	dsc
 3391	savant
 3392	efi-lm
@@ -5406,7 +5406,7 @@
 8074	gadugadu
 8076	slnp
 8077	mles
-8080	http-proxy
+8080	http
 8081	blackice-icecap
 8082	blackice-alerts
 8083	us-srv

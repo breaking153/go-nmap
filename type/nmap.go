@@ -2,12 +2,49 @@ package _type
 
 import (
 	"context"
+	"embed"
 	"fmt"
-	gonmap "github.com/breaking153/go-nmap"
 	"github.com/miekg/dns"
+	"strconv"
 	"strings"
 	"time"
 )
+
+var NmapServices []string
+var nmapServicesString = ``
+var NmapServiceProbes = ``
+
+//go:embed Resource/*
+var ResourceFS embed.FS
+
+func init() {
+	probesFile, err := ResourceFS.ReadFile("Resource/Probes.txt")
+	if err != nil {
+		panic("[error] can't Find Resource/Probes.txt")
+	}
+	serviceFile, err := ResourceFS.ReadFile("Resource/Services.txt")
+	if err != nil {
+		panic("[error] can't Find Resource/Services.txt")
+	}
+	nmapServicesString = strings.ReplaceAll(string(serviceFile), "\r\n", "\n")
+	NmapServiceProbes = strings.ReplaceAll(string(probesFile), "\r\n", "\n")
+	//初始化NmapService列表
+	NmapServices = func() []string {
+		var r []string
+		for _, line := range strings.Split(nmapServicesString, "\r\n") {
+			index := strings.Index(line, "\t")
+			v1 := line[:index]
+			v2 := line[index+1:]
+			port, _ := strconv.Atoi(v1)
+			protocol := v2
+			for i := len(r); i < port; i++ {
+				r = append(r, "unknown")
+			}
+			r = append(r, protocol)
+		}
+		return r
+	}()
+}
 
 type Nmap struct {
 	Exclude      PortList
@@ -28,8 +65,7 @@ type Nmap struct {
 	SslProbeMap        ProbeList
 }
 
-//扫描类
-
+// 扫描类
 func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status Status, response *Response) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	var resChan = make(chan bool)
@@ -47,7 +83,7 @@ func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status S
 				}
 			}
 		}()
-		status, response = n.Scan(ip, port)
+		status, response = n.scan(ip, port)
 		resChan <- true
 	}()
 
@@ -59,7 +95,8 @@ func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status S
 	}
 }
 
-func (n *Nmap) Scan(ip string, port int) (status Status, response *Response) {
+// 内部扫描单个线程
+func (n *Nmap) scan(ip string, port int) (status Status, response *Response) {
 	var probeNames ProbeList
 	if n.BypassAllProbePort.exist(port) == true {
 		probeNames = append(n.PortProbeMap[port], n.AllProbeMap...)
@@ -204,7 +241,7 @@ func (n *Nmap) getFinger(responseRaw string, tls bool, requestName string) *Fing
 	fallback := n.ProbeNameMap[requestName].Fallback
 	fallbackProbe := n.ProbeNameMap[fallback]
 	for fallback != "" {
-		gonmap.GlobalLogger.Println(requestName, " fallback is :", fallback)
+		GlobalLogger.Println(requestName, " fallback is :", fallback)
 		finger = fallbackProbe.match(data)
 		fallback = n.ProbeNameMap[fallback].Fallback
 		if finger.Service != "" {
@@ -272,6 +309,14 @@ func (n *Nmap) Loads(s string) {
 		p := parseProbe(lines)
 		n.pushProbe(*p)
 	}
+}
+
+func GuessProtocol(port int) string {
+	protocol := NmapServices[port]
+	if protocol == "unknown" {
+		protocol = "http"
+	}
+	return protocol
 }
 
 func (n *Nmap) loadExclude(expr string) {

@@ -81,7 +81,7 @@ func (p *Probe) match(s string) *FingerPrint {
 	return f
 }
 
-var probeExprRegx = regexp.MustCompile("^(UDP|TCP) ([a-zA-Z0-9-_./]+) (?:q\\|([^|]*)\\|)$")
+var probeExprRegx = regexp.MustCompile("^(UDP|TCP) ([a-zA-Z0-9-_./]+) (?:q\\|([^|]*)\\|).*$")
 var probeIntRegx = regexp.MustCompile(`^(\d+)$`)
 var probeStrRegx = regexp.MustCompile(`^([a-zA-Z0-9-_./]+)$`)
 
@@ -95,6 +95,7 @@ func parseProbe(lines []string) *Probe {
 	return p
 }
 
+// 加载探针
 func (p *Probe) loadLine(s string) {
 	//分解命令
 	i := strings.Index(s, " ")
@@ -126,7 +127,7 @@ func (p *Probe) loadLine(s string) {
 func (p *Probe) loadProbe(s string) {
 	//Probe <protocol> <probename> <probestring>
 	if !probeExprRegx.MatchString(s) {
-		panic(errors.New("probe 语句格式不正确"))
+		panic(errors.New("probe 语句格式不正确:" + s))
 	}
 	args := probeExprRegx.FindStringSubmatch(s)
 	if args[1] == "" || args[2] == "" {

@@ -3,7 +3,6 @@ package _type
 import (
 	"errors"
 	"fmt"
-	Probes "github.com/breaking153/go-nmap/probes"
 	"regexp"
 	"strconv"
 	"strings"
@@ -47,7 +46,6 @@ func parseMatch(s string, soft bool) *match {
 			regx = r
 		}
 	}
-
 	if regx == nil {
 		panic(errors.New("match 语句参数不正确"))
 	}
@@ -55,7 +53,6 @@ func parseMatch(s string, soft bool) *match {
 	args := regx.FindStringSubmatch(s)
 	m.soft = soft
 	m.service = args[1]
-	m.service = Probes.FixProtocol(m.service)
 	m.pattern = args[2]
 	m.patternRegexp = m.getPatternRegexp(m.pattern, args[3])
 	m.versionInfo = &FingerPrint{
