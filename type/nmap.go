@@ -47,14 +47,14 @@ func init() {
 }
 
 type Nmap struct {
-	Exclude      PortList
-	PortProbeMap map[int]ProbeList
-	ProbeNameMap map[string]*Probe
-	ProbeSort    ProbeList
+	Exclude      PortList          // 不进行扫描的端口列表
+	PortProbeMap map[int]ProbeList //
+	ProbeNameMap map[string]*Probe // 探针索引列表（名称）
+	ProbeSort    ProbeList         // 排序后的探针列表
 
-	ProbeUsed ProbeList
+	ProbeUsed ProbeList //使用的探针列表
 
-	Filter int
+	Filter int //需要筛选的探针等级，默认为9
 
 	//检测端口存活的超时时间
 	Timeout time.Duration
@@ -280,8 +280,7 @@ func (n *Nmap) AddMatch(probeName string, expr string) {
 	probe.loadMatch(expr, false)
 }
 
-//初始化类
-
+// 初始化类
 func (n *Nmap) Loads(s string) {
 	lines := strings.Split(s, "\n")
 	var probeGroups [][]string
@@ -346,6 +345,7 @@ func (n *Nmap) pushProbe(p Probe) {
 
 }
 
+// 修改FallBack内容
 func (n *Nmap) FixFallback() {
 	for probeName, probeType := range n.ProbeNameMap {
 		fallback := probeType.Fallback

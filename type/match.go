@@ -18,7 +18,6 @@ type match struct {
 }
 
 var matchLoadRegexps = []*regexp.Regexp{
-
 	regexp.MustCompile("^([a-zA-Z0-9-_./]+) m\\|([^|]+)\\|([is]{0,2})(?: (.*))?$"),
 	regexp.MustCompile("^([a-zA-Z0-9-_./]+) m=([^=]+)=([is]{0,2})(?: (.*))?$"),
 	regexp.MustCompile("^([a-zA-Z0-9-_./]+) m%([^%]+)%([is]{0,2})(?: (.*))?$"),
@@ -37,6 +36,57 @@ var matchVersionInfoRegexps = map[string]*regexp.Regexp{
 var matchVersionInfoHelperRegxP = regexp.MustCompile(`\$P\((\d)\)`)
 var matchVersionInfoHelperRegx = regexp.MustCompile(`\$(\d)`)
 
+// 进行最后输出修饰
+func FixProtocol(oldProtocol string) string {
+	var regexpFirstNum = regexp.MustCompile(`^\d`)
+	if oldProtocol == "ssl/http" {
+		return "https"
+	}
+	if oldProtocol == "http-proxy" {
+		return "http"
+	}
+	if oldProtocol == "ms-wbt-server" {
+		return "rdp"
+	}
+	if oldProtocol == "microsoft-ds" {
+		return "smb"
+	}
+	if oldProtocol == "netbios-ssn" {
+		return "netbios"
+	}
+	if oldProtocol == "oracle-tns" {
+		return "oracle"
+	}
+	if oldProtocol == "msrpc" {
+		return "rpc"
+	}
+	if oldProtocol == "ms-sql-s" {
+		return "mssql"
+	}
+	if oldProtocol == "domain" {
+		return "dns"
+	}
+	if oldProtocol == "svnserve" {
+		return "svn"
+	}
+	if oldProtocol == "ibm-db2" {
+		return "db2"
+	}
+	if oldProtocol == "socks-proxy" {
+		return "socks5"
+	}
+	if len(oldProtocol) > 4 {
+		if oldProtocol[:4] == "ssl/" {
+			return oldProtocol[4:] + "-ssl"
+		}
+	}
+	if regexpFirstNum.MatchString(oldProtocol) {
+		oldProtocol = "S" + oldProtocol
+	}
+	oldProtocol = strings.ReplaceAll(oldProtocol, "_", "-")
+	return oldProtocol
+}
+
 func parseMatch(s string, soft bool) *match {
 	var m = &match{}
 	var regx *regexp.Regexp
@@ -53,6 +103,7 @@ func parseMatch(s string, soft bool) *match {
 	args := regx.FindStringSubmatch(s)
 	m.soft = soft
 	m.service = args[1]
+	m.service = FixProtocol(m.service)
 	m.pattern = args[2]
 	m.patternRegexp = m.getPatternRegexp(m.pattern, args[3])
 	m.versionInfo = &FingerPrint{

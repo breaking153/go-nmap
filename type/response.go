@@ -28,7 +28,7 @@ func (s Status) String() string {
 }
 
 type Response struct {
-	Raw         string
+	Raw         string //
 	TLS         bool
 	FingerPrint *FingerPrint
 }

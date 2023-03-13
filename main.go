@@ -1,27 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"github.com/breaking153/go-nmap/core"
+	"github.com/breaking153/go-nmap/type"
 	"time"
 )
 
 // 用于进行测试！！！
 func main() {
 	var scanner = core.New()
-	host := "127.0.0.1"
-	port := 5001
+	host := "185.199.108.153"
+	port := 80
+	//扫描，status的枚举为Closed、Open、Matched、NotMatched、Unknown,分别为端口关闭，端口开启，匹配到指纹，未匹配到指纹
 	status, response := scanner.ScanTimeout(host, port, time.Second*30)
-
-	fmt.Println(status, response.FingerPrint.Service, host, ":", port)
-	port = 22
-	status, response = scanner.ScanTimeout(host, port, time.Second*30)
-
-	fmt.Println(status, response.FingerPrint.Service, host, ":", port)
-	port = 5000
-	status, response = scanner.ScanTimeout(host, port, time.Second*30)
-	fmt.Println(status, response.FingerPrint.Service, host, ":", port)
-	port = 445
-	status, response = scanner.ScanTimeout(host, port, time.Second*30)
-	fmt.Println(status, response.FingerPrint.Service, host, ":", port)
+	switch status {
+	case _type.Closed:
+		print("端口关闭")
+		break
+	default:
+		print(host + ":" + response.FingerPrint.Service)
+	}
 }
